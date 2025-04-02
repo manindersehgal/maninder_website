@@ -1,0 +1,49 @@
+[
+    {
+      "object": {
+        "vectorDataPoint": [
+          { "refPer": "2014Q1", "value": "519879" },
+          { "refPer": "2014Q2", "value": "525154" },
+          { "refPer": "2014Q3", "value": "529304" },
+          { "refPer": "2014Q4", "value": "530690" },
+          { "refPer": "2015Q1", "value": "534089" },
+          { "refPer": "2015Q2", "value": "531801" },
+          { "refPer": "2015Q3", "value": "535661" },
+          { "refPer": "2015Q4", "value": "541511" },
+          { "refPer": "2016Q1", "value": "548658" },
+          { "refPer": "2016Q2", "value": "548417" },
+          { "refPer": "2016Q3", "value": "558431" },
+          { "refPer": "2016Q4", "value": "565009" },
+          { "refPer": "2017Q1", "value": "574074" },
+          { "refPer": "2017Q2", "value": "584692" },
+          { "refPer": "2017Q3", "value": "589268" },
+          { "refPer": "2017Q4", "value": "592555" },
+          { "refPer": "2018Q1", "value": "595626" },
+          { "refPer": "2018Q2", "value": "599347" },
+          { "refPer": "2018Q3", "value": "602741" },
+          { "refPer": "2018Q4", "value": "604837" },
+          { "refPer": "2019Q1", "value": "608544" },
+          { "refPer": "2019Q2", "value": "611134" },
+          { "refPer": "2019Q3", "value": "612570" },
+          { "refPer": "2019Q4", "value": "615821" },
+          { "refPer": "2020Q1", "value": "608073" },
+          { "refPer": "2020Q2", "value": "548971" },
+          { "refPer": "2020Q3", "value": "607185" },
+          { "refPer": "2020Q4", "value": "620408" },
+          { "refPer": "2021Q1", "value": "629831" },
+          { "refPer": "2021Q2", "value": "634251" },
+          { "refPer": "2021Q3", "value": "638100" },
+          { "refPer": "2021Q4", "value": "650998" },
+          { "refPer": "2022Q1", "value": "660835" },
+          { "refPer": "2022Q2", "value": "674885" },
+          { "refPer": "2022Q3", "value": "676424" },
+          { "refPer": "2022Q4", "value": "682019" },
+          { "refPer": "2023Q1", "value": "688684" },
+          { "refPer": "2023Q2", "value": "691071" },
+          { "refPer": "2023Q3", "value": "692547" },
+          { "refPer": "2023Q4", "value": "695000" }
+        ]
+      }
+    }
+  ]
+  

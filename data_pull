@@ -1,0 +1,40 @@
+import requests
+import json
+
+# ✅ Correct endpoint
+url = "https://www150.statcan.gc.ca/t1/wds/rest/getDataFromVector"
+
+# Payload to get GDP data (vector ID: v65201210)
+payload = {
+    "vectorIds": ["v65201210"]
+}
+
+headers = {
+    "Content-Type": "application/json"
+}
+
+# Make the request
+response = requests.post(url, headers=headers, json=payload)
+
+# Debug output
+print("Status code:", response.status_code)
+print("Text sample:", response.text[:300])
+
+if response.status_code == 200 and response.text.startswith("["):
+    data = response.json()
+    vector_data = data[0]["object"]["vectorDataPoint"][-40:]  # last 10 years (40 quarters)
+
+    # Wrap in dashboard format
+    wrapped_data = [{
+        "object": {
+            "vectorDataPoint": vector_data
+        }
+    }]
+
+    with open("gdp_canada.json", "w") as f:
+        json.dump(wrapped_data, f, indent=2)
+
+    print("✅ GDP data saved to gdp_canada.json")
+else:
+    print("❌ Error: Unexpected response:")
+    print(response.text)
