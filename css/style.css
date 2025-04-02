@@ -1,10 +1,56 @@
+/* === Global Styles === */
 body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    padding: 50px;
-    background-color: #f9f9f9;
-  }
-  h1 {
-    color: #333;
-  }
-  
+  font-family: 'Segoe UI', sans-serif;
+  margin: 40px;
+  padding: 0;
+  background-color: #f9f9f9;
+  color: #333;
+  text-align: center;
+}
+
+h1, h2 {
+  color: #1a237e;
+  margin-bottom: 20px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+ul li {
+  margin: 10px 0;
+}
+
+a {
+  text-decoration: none;
+  color: #1565c0;
+  font-weight: bold;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* === Canvas Chart Styles === */
+canvas {
+  max-width: 700px;
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 30px auto;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* === Dashboard Container (optional) === */
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+}
