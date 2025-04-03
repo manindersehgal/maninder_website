@@ -1,22 +1,56 @@
-.link-row {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 30px;
-  flex-wrap: wrap;
+/* === Global Styles === */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 40px;
+  padding: 0;
+  background-color: #f9f9f9;
+  color: #333;
+  text-align: center;
 }
 
-.home-link {
+h1, h2 {
+  color: #1a237e;
+  margin-bottom: 20px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+ul li {
+  margin: 10px 0;
+}
+
+a {
   text-decoration: none;
-  color: #0077cc;
-  font-size: 1.4em;
-  padding: 15px 25px;
-  border: 2px solid #0077cc;
-  border-radius: 10px;
-  transition: 0.3s;
+  color: #1565c0;
+  font-weight: bold;
 }
 
-.home-link:hover {
-  background-color: #0077cc;
-  color: white;
-  cursor: pointer;
+a:hover {
+  text-decoration: underline;
+}
+
+/* === Canvas Chart Styles === */
+canvas {
+  max-width: 700px;
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 30px auto;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* === Dashboard Container (optional) === */
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
 }
