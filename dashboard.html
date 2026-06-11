@@ -1,21 +1,1013 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <title>Economic Dashboards</title>
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Canada Economic Dashboard — real-time economic indicators including GDP, inflation, employment, housing, and more." />
+  <title>Canada Economic Dashboard</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Bootstrap 5.3 -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+
+  <!-- Bootstrap Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    integrity="sha384-tViUnnbYAV00ruLTd4v2p7C4mBnMPRcv6a0t07KQisMEPTdF44NG2n0n+hcQ/F1P"
+    crossorigin="anonymous"
+  />
+
+  <!-- Dashboard CSS -->
+  <link rel="stylesheet" href="css/dashboard.css" />
 </head>
 <body>
-  <h1>Welcome to my Economic Dashboards</h1>
-  <p>Select a dashboard to view economic trends:</p>
 
-  <ul>
-    <li><a href="dashboards/gdp.html">Canada GDP Dashboard</a></li>
-    <li><a href="dashboards/labour_productivity.html">Labour Productivity</a></li>
-    <li><a href="dashboards/gdp_per_capita.html">GDP per Capita</a></li>
-    <li><a href="dashboards/oecd_gdp_comparison.html">OECD GDP Comparison</a></li>
-    <li><a href="dashboards/interest_inflation.html">Interest & Inflation</a></li>
+  <!-- ============================================================
+       NAVBAR
+  ============================================================ -->
+  <header>
+    <nav class="navbar navbar-expand-lg sticky-top" id="main-navbar" aria-label="Main navigation">
+      <div class="container-fluid px-4">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+          <span class="navbar-logo-icon">
+            <i class="bi bi-bar-chart-line-fill"></i>
+          </span>
+          <span class="navbar-title">Canada Economic Dashboard</span>
+        </a>
 
-  </ul>
+        <div class="d-flex align-items-center gap-3 ms-auto">
+          <span class="navbar-subtitle d-none d-md-inline">Real-time Canadian Economic Indicators</span>
+          <button
+            class="btn btn-theme-toggle"
+            id="theme-toggle"
+            aria-label="Toggle dark/light mode"
+            title="Toggle dark/light mode"
+          >
+            <i class="bi bi-sun-fill" id="theme-icon-light"></i>
+            <i class="bi bi-moon-fill d-none" id="theme-icon-dark"></i>
+            <span class="toggle-label d-none d-sm-inline ms-1" id="theme-label">Light</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ============================================================
+       MAIN CONTENT
+  ============================================================ -->
+  <main id="main-content">
+    <div class="container-fluid px-3 px-md-4">
+
+      <!-- --------------------------------------------------------
+           KPI SUMMARY CARDS
+      -------------------------------------------------------- -->
+      <section class="kpi-section py-4" aria-label="Key Performance Indicators">
+        <div class="row g-3">
+
+          <!-- GDP -->
+          <div class="col-6 col-lg-3">
+            <article class="kpi-card" aria-label="GDP indicator">
+              <div class="kpi-card-inner">
+                <div class="kpi-icon kpi-icon-gdp">
+                  <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <div class="kpi-content">
+                  <p class="kpi-label">Real GDP</p>
+                  <p class="kpi-value" id="kpi-gdp-value">
+                    <span class="kpi-skeleton"></span>
+                  </p>
+                  <p class="kpi-change" id="kpi-gdp-change">
+                    <span class="kpi-skeleton kpi-skeleton-sm"></span>
+                  </p>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <!-- CPI -->
+          <div class="col-6 col-lg-3">
+            <article class="kpi-card" aria-label="CPI indicator">
+              <div class="kpi-card-inner">
+                <div class="kpi-icon kpi-icon-cpi">
+                  <i class="bi bi-receipt"></i>
+                </div>
+                <div class="kpi-content">
+                  <p class="kpi-label">CPI Inflation</p>
+                  <p class="kpi-value" id="kpi-cpi-value">
+                    <span class="kpi-skeleton"></span>
+                  </p>
+                  <p class="kpi-change" id="kpi-cpi-change">
+                    <span class="kpi-skeleton kpi-skeleton-sm"></span>
+                  </p>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <!-- Unemployment -->
+          <div class="col-6 col-lg-3">
+            <article class="kpi-card" aria-label="Unemployment indicator">
+              <div class="kpi-card-inner">
+                <div class="kpi-icon kpi-icon-unemployment">
+                  <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="kpi-content">
+                  <p class="kpi-label">Unemployment</p>
+                  <p class="kpi-value" id="kpi-unemployment-value">
+                    <span class="kpi-skeleton"></span>
+                  </p>
+                  <p class="kpi-change" id="kpi-unemployment-change">
+                    <span class="kpi-skeleton kpi-skeleton-sm"></span>
+                  </p>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <!-- BoC Rate -->
+          <div class="col-6 col-lg-3">
+            <article class="kpi-card" aria-label="Bank of Canada policy rate indicator">
+              <div class="kpi-card-inner">
+                <div class="kpi-icon kpi-icon-boc">
+                  <i class="bi bi-bank2"></i>
+                </div>
+                <div class="kpi-content">
+                  <p class="kpi-label">BoC Policy Rate</p>
+                  <p class="kpi-value" id="kpi-boc-value">
+                    <span class="kpi-skeleton"></span>
+                  </p>
+                  <p class="kpi-change" id="kpi-boc-change">
+                    <span class="kpi-skeleton kpi-skeleton-sm"></span>
+                  </p>
+                </div>
+              </div>
+            </article>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- --------------------------------------------------------
+           TAB NAVIGATION
+      -------------------------------------------------------- -->
+      <section class="dashboard-tabs-section" aria-label="Dashboard sections">
+
+        <nav aria-label="Economic indicator tabs">
+          <ul class="nav nav-tabs dashboard-nav-tabs" id="dashboardTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link active"
+                id="tab-gdp"
+                data-bs-toggle="tab"
+                data-bs-target="#panel-gdp"
+                type="button"
+                role="tab"
+                aria-controls="panel-gdp"
+                aria-selected="true"
+              >
+                <i class="bi bi-graph-up me-1"></i>
+                <span>GDP</span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="tab-labour"
+                data-bs-toggle="tab"
+                data-bs-target="#panel-labour"
+                type="button"
+                role="tab"
+                aria-controls="panel-labour"
+                aria-selected="false"
+              >
+                <i class="bi bi-tools me-1"></i>
+                <span>Labour</span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="tab-gdp-per-capita"
+                data-bs-toggle="tab"
+                data-bs-target="#panel-gdp-per-capita"
+                type="button"
+                role="tab"
+                aria-controls="panel-gdp-per-capita"
+                aria-selected="false"
+              >
+                <i class="bi bi-person-badge me-1"></i>
+                <span>GDP Per Capita</span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="tab-international"
+                data-bs-toggle="tab"
+                data-bs-target="#panel-international"
+                type="button"
+                role="tab"
+                aria-controls="panel-international"
+                aria-selected="false"
+              >
+                <i class="bi bi-globe2 me-1"></i>
+                <span>International</span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="tab-inflation"
+                data-bs-toggle="tab"
+                data-bs-target="#panel-inflation"
+                type="button"
+                role="tab"
+                aria-controls="panel-inflation"
+                aria-selected="false"
+              >
+                <i class="bi bi-currency-dollar me-1"></i>
+                <span>Interest &amp; Inflation</span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="tab-employment"
+                data-bs-toggle="tab"
+                data-bs-target="#panel-employment"
+                type="button"
+                role="tab"
+                aria-controls="panel-employment"
+                aria-selected="false"
+              >
+                <i class="bi bi-briefcase me-1"></i>
+                <span>Employment</span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="tab-housing"
+                data-bs-toggle="tab"
+                data-bs-target="#panel-housing"
+                type="button"
+                role="tab"
+                aria-controls="panel-housing"
+                aria-selected="false"
+              >
+                <i class="bi bi-house-fill me-1"></i>
+                <span>Housing</span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="tab-retail"
+                data-bs-toggle="tab"
+                data-bs-target="#panel-retail"
+                type="button"
+                role="tab"
+                aria-controls="panel-retail"
+                aria-selected="false"
+              >
+                <i class="bi bi-bag-fill me-1"></i>
+                <span>Retail</span>
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="tab-trade"
+                data-bs-toggle="tab"
+                data-bs-target="#panel-trade"
+                type="button"
+                role="tab"
+                aria-controls="panel-trade"
+                aria-selected="false"
+              >
+                <i class="bi bi-arrow-left-right me-1"></i>
+                <span>Trade</span>
+              </button>
+            </li>
+          </ul>
+        </nav>
+
+        <!-- TAB PANELS -->
+        <div class="tab-content dashboard-tab-content" id="dashboardTabContent">
+
+          <!-- ---- GDP Panel ---- -->
+          <div
+            class="tab-pane fade show active"
+            id="panel-gdp"
+            role="tabpanel"
+            aria-labelledby="tab-gdp"
+          >
+            <div class="chart-panel" data-chart="chart-gdp">
+              <div class="chart-panel-header">
+                <div class="chart-panel-title-group">
+                  <h2 class="chart-panel-title">Canada GDP — Quarterly</h2>
+                  <p class="chart-panel-subtitle">Real &amp; Nominal GDP, seasonally adjusted (millions CAD)</p>
+                </div>
+                <div class="chart-panel-meta">
+                  <span class="chart-source-badge">
+                    <i class="bi bi-database me-1"></i>StatsCan WDS
+                  </span>
+                  <span class="chart-updated-label" id="updated-chart-gdp">
+                    <i class="bi bi-clock me-1"></i>Loading…
+                  </span>
+                </div>
+              </div>
+
+              <div class="chart-wrapper">
+                <div class="chart-spinner" id="spinner-chart-gdp" aria-label="Loading chart data" role="status">
+                  <div class="spinner-ring"></div>
+                  <p class="spinner-text">Loading GDP data…</p>
+                </div>
+                <div class="chart-error d-none" id="error-chart-gdp" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill chart-error-icon"></i>
+                  <p class="chart-error-title">Data unavailable</p>
+                  <p class="chart-error-msg">Check your connection or try again later.</p>
+                  <button class="btn btn-sm btn-outline-secondary retry-btn" data-target="chart-gdp">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Retry
+                  </button>
+                </div>
+                <canvas id="chart-gdp" aria-label="Canada quarterly GDP chart" role="img"></canvas>
+              </div>
+
+              <div class="chart-table-wrapper">
+                <h3 class="chart-table-title">Recent Data</h3>
+                <div class="table-responsive">
+                  <table class="table table-sm chart-data-table" id="table-chart-gdp" aria-label="GDP recent data table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Period</th>
+                        <th scope="col" class="text-end">Real GDP (M CAD)</th>
+                        <th scope="col" class="text-end">Nominal GDP (M CAD)</th>
+                        <th scope="col" class="text-end">YoY Change</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbody-chart-gdp">
+                      <tr><td colspan="4" class="text-center text-muted py-3">Loading data…</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---- Labour Productivity Panel ---- -->
+          <div
+            class="tab-pane fade"
+            id="panel-labour"
+            role="tabpanel"
+            aria-labelledby="tab-labour"
+          >
+            <div class="chart-panel" data-chart="chart-labour">
+              <div class="chart-panel-header">
+                <div class="chart-panel-title-group">
+                  <h2 class="chart-panel-title">Labour Productivity</h2>
+                  <p class="chart-panel-subtitle">Output per hour worked, index (2017=100), seasonally adjusted</p>
+                </div>
+                <div class="chart-panel-meta">
+                  <span class="chart-source-badge">
+                    <i class="bi bi-database me-1"></i>StatsCan WDS
+                  </span>
+                  <span class="chart-updated-label" id="updated-chart-labour">
+                    <i class="bi bi-clock me-1"></i>Loading…
+                  </span>
+                </div>
+              </div>
+
+              <div class="chart-wrapper">
+                <div class="chart-spinner" id="spinner-chart-labour" aria-label="Loading chart data" role="status">
+                  <div class="spinner-ring"></div>
+                  <p class="spinner-text">Loading productivity data…</p>
+                </div>
+                <div class="chart-error d-none" id="error-chart-labour" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill chart-error-icon"></i>
+                  <p class="chart-error-title">Data unavailable</p>
+                  <p class="chart-error-msg">Check your connection or try again later.</p>
+                  <button class="btn btn-sm btn-outline-secondary retry-btn" data-target="chart-labour">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Retry
+                  </button>
+                </div>
+                <canvas id="chart-labour" aria-label="Canada labour productivity chart" role="img"></canvas>
+              </div>
+
+              <div class="chart-table-wrapper">
+                <h3 class="chart-table-title">Recent Data</h3>
+                <div class="table-responsive">
+                  <table class="table table-sm chart-data-table" id="table-chart-labour" aria-label="Labour productivity recent data table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Period</th>
+                        <th scope="col" class="text-end">Index (2017=100)</th>
+                        <th scope="col" class="text-end">QoQ Change</th>
+                        <th scope="col" class="text-end">YoY Change</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbody-chart-labour">
+                      <tr><td colspan="4" class="text-center text-muted py-3">Loading data…</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---- GDP Per Capita Panel ---- -->
+          <div
+            class="tab-pane fade"
+            id="panel-gdp-per-capita"
+            role="tabpanel"
+            aria-labelledby="tab-gdp-per-capita"
+          >
+            <div class="chart-panel" data-chart="chart-gdp-per-capita">
+              <div class="chart-panel-header">
+                <div class="chart-panel-title-group">
+                  <h2 class="chart-panel-title">GDP Per Capita</h2>
+                  <p class="chart-panel-subtitle">Real GDP per person, chained 2017 dollars (CAD)</p>
+                </div>
+                <div class="chart-panel-meta">
+                  <span class="chart-source-badge">
+                    <i class="bi bi-database me-1"></i>StatsCan WDS
+                  </span>
+                  <span class="chart-updated-label" id="updated-chart-gdp-per-capita">
+                    <i class="bi bi-clock me-1"></i>Loading…
+                  </span>
+                </div>
+              </div>
+
+              <div class="chart-wrapper">
+                <div class="chart-spinner" id="spinner-chart-gdp-per-capita" aria-label="Loading chart data" role="status">
+                  <div class="spinner-ring"></div>
+                  <p class="spinner-text">Loading GDP per capita data…</p>
+                </div>
+                <div class="chart-error d-none" id="error-chart-gdp-per-capita" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill chart-error-icon"></i>
+                  <p class="chart-error-title">Data unavailable</p>
+                  <p class="chart-error-msg">Check your connection or try again later.</p>
+                  <button class="btn btn-sm btn-outline-secondary retry-btn" data-target="chart-gdp-per-capita">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Retry
+                  </button>
+                </div>
+                <canvas id="chart-gdp-per-capita" aria-label="Canada GDP per capita chart" role="img"></canvas>
+              </div>
+
+              <div class="chart-table-wrapper">
+                <h3 class="chart-table-title">Recent Data</h3>
+                <div class="table-responsive">
+                  <table class="table table-sm chart-data-table" id="table-chart-gdp-per-capita" aria-label="GDP per capita recent data table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Period</th>
+                        <th scope="col" class="text-end">GDP Per Capita (CAD)</th>
+                        <th scope="col" class="text-end">QoQ Change</th>
+                        <th scope="col" class="text-end">YoY Change</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbody-chart-gdp-per-capita">
+                      <tr><td colspan="4" class="text-center text-muted py-3">Loading data…</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---- International GDP Comparison Panel ---- -->
+          <div
+            class="tab-pane fade"
+            id="panel-international"
+            role="tabpanel"
+            aria-labelledby="tab-international"
+          >
+            <div class="chart-panel" data-chart="chart-international">
+              <div class="chart-panel-header">
+                <div class="chart-panel-title-group">
+                  <h2 class="chart-panel-title">OECD / International GDP Comparison</h2>
+                  <p class="chart-panel-subtitle">GDP per capita, PPP (constant 2017 international $) — selected countries</p>
+                </div>
+                <div class="chart-panel-meta">
+                  <span class="chart-source-badge">
+                    <i class="bi bi-globe me-1"></i>World Bank API
+                  </span>
+                  <span class="chart-updated-label" id="updated-chart-international">
+                    <i class="bi bi-clock me-1"></i>Loading…
+                  </span>
+                </div>
+              </div>
+
+              <div class="chart-wrapper">
+                <div class="chart-spinner" id="spinner-chart-international" aria-label="Loading chart data" role="status">
+                  <div class="spinner-ring"></div>
+                  <p class="spinner-text">Loading international comparison data…</p>
+                </div>
+                <div class="chart-error d-none" id="error-chart-international" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill chart-error-icon"></i>
+                  <p class="chart-error-title">Data unavailable</p>
+                  <p class="chart-error-msg">Check your connection or try again later.</p>
+                  <button class="btn btn-sm btn-outline-secondary retry-btn" data-target="chart-international">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Retry
+                  </button>
+                </div>
+                <canvas id="chart-international" aria-label="OECD international GDP comparison chart" role="img"></canvas>
+              </div>
+
+              <div class="chart-table-wrapper">
+                <h3 class="chart-table-title">Latest Year Comparison</h3>
+                <div class="table-responsive">
+                  <table class="table table-sm chart-data-table" id="table-chart-international" aria-label="International GDP comparison data table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Country</th>
+                        <th scope="col" class="text-end">GDP Per Capita (Int$)</th>
+                        <th scope="col" class="text-end">vs. Canada</th>
+                        <th scope="col" class="text-end">Year</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbody-chart-international">
+                      <tr><td colspan="4" class="text-center text-muted py-3">Loading data…</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---- Interest & Inflation Panel ---- -->
+          <div
+            class="tab-pane fade"
+            id="panel-inflation"
+            role="tabpanel"
+            aria-labelledby="tab-inflation"
+          >
+            <div class="row g-4">
+
+              <!-- CPI Inflation chart -->
+              <div class="col-12 col-xl-6">
+                <div class="chart-panel" data-chart="chart-inflation">
+                  <div class="chart-panel-header">
+                    <div class="chart-panel-title-group">
+                      <h2 class="chart-panel-title">CPI Inflation</h2>
+                      <p class="chart-panel-subtitle">Consumer Price Index, year-over-year % change</p>
+                    </div>
+                    <div class="chart-panel-meta">
+                      <span class="chart-source-badge">
+                        <i class="bi bi-database me-1"></i>StatsCan WDS
+                      </span>
+                      <span class="chart-updated-label" id="updated-chart-inflation">
+                        <i class="bi bi-clock me-1"></i>Loading…
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="chart-wrapper">
+                    <div class="chart-spinner" id="spinner-chart-inflation" aria-label="Loading chart data" role="status">
+                      <div class="spinner-ring"></div>
+                      <p class="spinner-text">Loading inflation data…</p>
+                    </div>
+                    <div class="chart-error d-none" id="error-chart-inflation" role="alert">
+                      <i class="bi bi-exclamation-triangle-fill chart-error-icon"></i>
+                      <p class="chart-error-title">Data unavailable</p>
+                      <p class="chart-error-msg">Check your connection or try again later.</p>
+                      <button class="btn btn-sm btn-outline-secondary retry-btn" data-target="chart-inflation">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Retry
+                      </button>
+                    </div>
+                    <canvas id="chart-inflation" aria-label="Canada CPI inflation chart" role="img"></canvas>
+                  </div>
+
+                  <div class="chart-table-wrapper">
+                    <h3 class="chart-table-title">Recent Data</h3>
+                    <div class="table-responsive">
+                      <table class="table table-sm chart-data-table" id="table-chart-inflation" aria-label="CPI inflation recent data table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Period</th>
+                            <th scope="col" class="text-end">CPI Index</th>
+                            <th scope="col" class="text-end">MoM %</th>
+                            <th scope="col" class="text-end">YoY %</th>
+                          </tr>
+                        </thead>
+                        <tbody id="tbody-chart-inflation">
+                          <tr><td colspan="4" class="text-center text-muted py-3">Loading data…</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Interest Rate chart -->
+              <div class="col-12 col-xl-6">
+                <div class="chart-panel" data-chart="chart-interest">
+                  <div class="chart-panel-header">
+                    <div class="chart-panel-title-group">
+                      <h2 class="chart-panel-title">Bank of Canada Policy Rate</h2>
+                      <p class="chart-panel-subtitle">Overnight lending rate target (%)</p>
+                    </div>
+                    <div class="chart-panel-meta">
+                      <span class="chart-source-badge">
+                        <i class="bi bi-database me-1"></i>StatsCan WDS
+                      </span>
+                      <span class="chart-updated-label" id="updated-chart-interest">
+                        <i class="bi bi-clock me-1"></i>Loading…
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="chart-wrapper">
+                    <div class="chart-spinner" id="spinner-chart-interest" aria-label="Loading chart data" role="status">
+                      <div class="spinner-ring"></div>
+                      <p class="spinner-text">Loading interest rate data…</p>
+                    </div>
+                    <div class="chart-error d-none" id="error-chart-interest" role="alert">
+                      <i class="bi bi-exclamation-triangle-fill chart-error-icon"></i>
+                      <p class="chart-error-title">Data unavailable</p>
+                      <p class="chart-error-msg">Check your connection or try again later.</p>
+                      <button class="btn btn-sm btn-outline-secondary retry-btn" data-target="chart-interest">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Retry
+                      </button>
+                    </div>
+                    <canvas id="chart-interest" aria-label="Bank of Canada interest rate chart" role="img"></canvas>
+                  </div>
+
+                  <div class="chart-table-wrapper">
+                    <h3 class="chart-table-title">Recent Data</h3>
+                    <div class="table-responsive">
+                      <table class="table table-sm chart-data-table" id="table-chart-interest" aria-label="Interest rate recent data table">
+                        <thead>
+                          <tr>
+                            <th scope="col">Date</th>
+                            <th scope="col" class="text-end">Rate (%)</th>
+                            <th scope="col" class="text-end">Change (bps)</th>
+                            <th scope="col" class="text-end">Direction</th>
+                          </tr>
+                        </thead>
+                        <tbody id="tbody-chart-interest">
+                          <tr><td colspan="4" class="text-center text-muted py-3">Loading data…</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ---- Employment Panel ---- -->
+          <div
+            class="tab-pane fade"
+            id="panel-employment"
+            role="tabpanel"
+            aria-labelledby="tab-employment"
+          >
+            <div class="chart-panel" data-chart="chart-employment">
+              <div class="chart-panel-header">
+                <div class="chart-panel-title-group">
+                  <h2 class="chart-panel-title">Employment &amp; Unemployment Rate</h2>
+                  <p class="chart-panel-subtitle">Total employed (thousands) &amp; unemployment rate (%), seasonally adjusted</p>
+                </div>
+                <div class="chart-panel-meta">
+                  <span class="chart-source-badge">
+                    <i class="bi bi-database me-1"></i>StatsCan WDS
+                  </span>
+                  <span class="chart-updated-label" id="updated-chart-employment">
+                    <i class="bi bi-clock me-1"></i>Loading…
+                  </span>
+                </div>
+              </div>
+
+              <div class="chart-wrapper">
+                <div class="chart-spinner" id="spinner-chart-employment" aria-label="Loading chart data" role="status">
+                  <div class="spinner-ring"></div>
+                  <p class="spinner-text">Loading employment data…</p>
+                </div>
+                <div class="chart-error d-none" id="error-chart-employment" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill chart-error-icon"></i>
+                  <p class="chart-error-title">Data unavailable</p>
+                  <p class="chart-error-msg">Check your connection or try again later.</p>
+                  <button class="btn btn-sm btn-outline-secondary retry-btn" data-target="chart-employment">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Retry
+                  </button>
+                </div>
+                <canvas id="chart-employment" aria-label="Canada employment and unemployment rate chart" role="img"></canvas>
+              </div>
+
+              <div class="chart-table-wrapper">
+                <h3 class="chart-table-title">Recent Data</h3>
+                <div class="table-responsive">
+                  <table class="table table-sm chart-data-table" id="table-chart-employment" aria-label="Employment recent data table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Period</th>
+                        <th scope="col" class="text-end">Employed (000s)</th>
+                        <th scope="col" class="text-end">Unemployment Rate (%)</th>
+                        <th scope="col" class="text-end">MoM Change (000s)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbody-chart-employment">
+                      <tr><td colspan="4" class="text-center text-muted py-3">Loading data…</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---- Housing Starts Panel ---- -->
+          <div
+            class="tab-pane fade"
+            id="panel-housing"
+            role="tabpanel"
+            aria-labelledby="tab-housing"
+          >
+            <div class="chart-panel" data-chart="chart-housing">
+              <div class="chart-panel-header">
+                <div class="chart-panel-title-group">
+                  <h2 class="chart-panel-title">Housing Starts</h2>
+                  <p class="chart-panel-subtitle">Total housing starts (units), seasonally adjusted annual rate</p>
+                </div>
+                <div class="chart-panel-meta">
+                  <span class="chart-source-badge">
+                    <i class="bi bi-database me-1"></i>StatsCan WDS
+                  </span>
+                  <span class="chart-updated-label" id="updated-chart-housing">
+                    <i class="bi bi-clock me-1"></i>Loading…
+                  </span>
+                </div>
+              </div>
+
+              <div class="chart-wrapper">
+                <div class="chart-spinner" id="spinner-chart-housing" aria-label="Loading chart data" role="status">
+                  <div class="spinner-ring"></div>
+                  <p class="spinner-text">Loading housing data…</p>
+                </div>
+                <div class="chart-error d-none" id="error-chart-housing" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill chart-error-icon"></i>
+                  <p class="chart-error-title">Data unavailable</p>
+                  <p class="chart-error-msg">Check your connection or try again later.</p>
+                  <button class="btn btn-sm btn-outline-secondary retry-btn" data-target="chart-housing">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Retry
+                  </button>
+                </div>
+                <canvas id="chart-housing" aria-label="Canada housing starts chart" role="img"></canvas>
+              </div>
+
+              <div class="chart-table-wrapper">
+                <h3 class="chart-table-title">Recent Data</h3>
+                <div class="table-responsive">
+                  <table class="table table-sm chart-data-table" id="table-chart-housing" aria-label="Housing starts recent data table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Period</th>
+                        <th scope="col" class="text-end">Housing Starts (SAAR)</th>
+                        <th scope="col" class="text-end">MoM Change (%)</th>
+                        <th scope="col" class="text-end">YoY Change (%)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbody-chart-housing">
+                      <tr><td colspan="4" class="text-center text-muted py-3">Loading data…</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---- Retail Sales Panel ---- -->
+          <div
+            class="tab-pane fade"
+            id="panel-retail"
+            role="tabpanel"
+            aria-labelledby="tab-retail"
+          >
+            <div class="chart-panel" data-chart="chart-retail">
+              <div class="chart-panel-header">
+                <div class="chart-panel-title-group">
+                  <h2 class="chart-panel-title">Retail Sales</h2>
+                  <p class="chart-panel-subtitle">Total retail trade sales (millions CAD), seasonally adjusted</p>
+                </div>
+                <div class="chart-panel-meta">
+                  <span class="chart-source-badge">
+                    <i class="bi bi-database me-1"></i>StatsCan WDS
+                  </span>
+                  <span class="chart-updated-label" id="updated-chart-retail">
+                    <i class="bi bi-clock me-1"></i>Loading…
+                  </span>
+                </div>
+              </div>
+
+              <div class="chart-wrapper">
+                <div class="chart-spinner" id="spinner-chart-retail" aria-label="Loading chart data" role="status">
+                  <div class="spinner-ring"></div>
+                  <p class="spinner-text">Loading retail sales data…</p>
+                </div>
+                <div class="chart-error d-none" id="error-chart-retail" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill chart-error-icon"></i>
+                  <p class="chart-error-title">Data unavailable</p>
+                  <p class="chart-error-msg">Check your connection or try again later.</p>
+                  <button class="btn btn-sm btn-outline-secondary retry-btn" data-target="chart-retail">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Retry
+                  </button>
+                </div>
+                <canvas id="chart-retail" aria-label="Canada retail sales chart" role="img"></canvas>
+              </div>
+
+              <div class="chart-table-wrapper">
+                <h3 class="chart-table-title">Recent Data</h3>
+                <div class="table-responsive">
+                  <table class="table table-sm chart-data-table" id="table-chart-retail" aria-label="Retail sales recent data table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Period</th>
+                        <th scope="col" class="text-end">Sales (M CAD)</th>
+                        <th scope="col" class="text-end">MoM Change (%)</th>
+                        <th scope="col" class="text-end">YoY Change (%)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbody-chart-retail">
+                      <tr><td colspan="4" class="text-center text-muted py-3">Loading data…</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ---- Trade Balance Panel ---- -->
+          <div
+            class="tab-pane fade"
+            id="panel-trade"
+            role="tabpanel"
+            aria-labelledby="tab-trade"
+          >
+            <div class="chart-panel" data-chart="chart-trade">
+              <div class="chart-panel-header">
+                <div class="chart-panel-title-group">
+                  <h2 class="chart-panel-title">Trade Balance — Exports vs. Imports</h2>
+                  <p class="chart-panel-subtitle">Merchandise trade in goods (millions CAD), seasonally adjusted</p>
+                </div>
+                <div class="chart-panel-meta">
+                  <span class="chart-source-badge">
+                    <i class="bi bi-database me-1"></i>StatsCan WDS
+                  </span>
+                  <span class="chart-updated-label" id="updated-chart-trade">
+                    <i class="bi bi-clock me-1"></i>Loading…
+                  </span>
+                </div>
+              </div>
+
+              <div class="chart-wrapper">
+                <div class="chart-spinner" id="spinner-chart-trade" aria-label="Loading chart data" role="status">
+                  <div class="spinner-ring"></div>
+                  <p class="spinner-text">Loading trade data…</p>
+                </div>
+                <div class="chart-error d-none" id="error-chart-trade" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill chart-error-icon"></i>
+                  <p class="chart-error-title">Data unavailable</p>
+                  <p class="chart-error-msg">Check your connection or try again later.</p>
+                  <button class="btn btn-sm btn-outline-secondary retry-btn" data-target="chart-trade">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Retry
+                  </button>
+                </div>
+                <canvas id="chart-trade" aria-label="Canada trade balance exports vs imports chart" role="img"></canvas>
+              </div>
+
+              <div class="chart-table-wrapper">
+                <h3 class="chart-table-title">Recent Data</h3>
+                <div class="table-responsive">
+                  <table class="table table-sm chart-data-table" id="table-chart-trade" aria-label="Trade balance recent data table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Period</th>
+                        <th scope="col" class="text-end">Exports (M CAD)</th>
+                        <th scope="col" class="text-end">Imports (M CAD)</th>
+                        <th scope="col" class="text-end">Balance (M CAD)</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbody-chart-trade">
+                      <tr><td colspan="4" class="text-center text-muted py-3">Loading data…</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /tab-content -->
+      </section>
+
+    </div><!-- /container-fluid -->
+  </main>
+
+  <!-- ============================================================
+       PAGE FOOTER
+  ============================================================ -->
+  <footer class="page-footer" role="contentinfo">
+    <div class="container-fluid px-3 px-md-4">
+      <div class="footer-inner">
+        <div class="footer-sources">
+          <i class="bi bi-info-circle me-2"></i>
+          <span>Data sourced from </span>
+          <a
+            href="https://www150.statcan.gc.ca/n1/en/type/data"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+          >Statistics Canada (StatsCan WDS API)</a>
+          <span> and </span>
+          <a
+            href="https://data.worldbank.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link"
+          >World Bank API</a>
+          <span>. All figures are for informational purposes only.</span>
+        </div>
+        <div class="footer-right">
+          <span class="footer-build-info">
+            <i class="bi bi-code-slash me-1"></i>
+            <a
+              href="https://manindersehgal.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="footer-link"
+            >manindersehgal.com</a>
+          </span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       SCRIPTS
+  ============================================================ -->
+  <!-- Bootstrap 5.3 JS Bundle (includes Popper) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmAMhJmwG7QG29C5XD3sYDHvHqY"
+    crossorigin="anonymous"
+  ></script>
+
+  <!-- Chart.js 4.x -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
+    integrity="sha384-bE4WX7vGXrGONxYOSmR9M0c3mq6r87lv1yoEt1sSmr4pq4XhRbiBU7D/IFdEyQm"
+    crossorigin="anonymous"
+  ></script>
+
+  <!-- Application JS modules (written by backend agent) -->
+  <script src="js/statscan.js"></script>
+  <script src="js/worldbank.js"></script>
+  <script src="js/main.js"></script>
+
+  <!-- Theme toggle inline init (runs before main.js to avoid FOUC) -->
+  <script>
+    (function () {
+      var saved = localStorage.getItem('dashboard-theme');
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+        var iconLight = document.getElementById('theme-icon-light');
+        var iconDark = document.getElementById('theme-icon-dark');
+        var label = document.getElementById('theme-label');
+        if (iconLight) iconLight.classList.add('d-none');
+        if (iconDark) iconDark.classList.remove('d-none');
+        if (label) label.textContent = 'Dark';
+      }
+      document.getElementById('theme-toggle').addEventListener('click', function () {
+        var html = document.documentElement;
+        var isDark = html.getAttribute('data-bs-theme') === 'dark';
+        var next = isDark ? 'light' : 'dark';
+        html.setAttribute('data-bs-theme', next);
+        localStorage.setItem('dashboard-theme', next);
+        var iL = document.getElementById('theme-icon-light');
+        var iD = document.getElementById('theme-icon-dark');
+        var lbl = document.getElementById('theme-label');
+        if (next === 'dark') {
+          iL.classList.add('d-none');
+          iD.classList.remove('d-none');
+          lbl.textContent = 'Dark';
+        } else {
+          iL.classList.remove('d-none');
+          iD.classList.add('d-none');
+          lbl.textContent = 'Light';
+        }
+      });
+    })();
+  </script>
+
 </body>
 </html>
