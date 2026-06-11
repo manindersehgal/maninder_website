@@ -3,12 +3,16 @@
  * Statistics Canada WDS REST API data layer
  * Exposes window.StatsCanAPI with functions for each economic indicator.
  * Responses are cached in sessionStorage to avoid redundant network calls.
+ *
+ * NOTE: The StatsCan WDS API uses POST for all data endpoints.
+ * If charts fail with CORS errors in the browser console, the recommended
+ * fix is to use a pre-computed blob storage layer (see Databricks pipeline).
  */
 
 (function () {
   'use strict';
 
-  const BASE_URL = 'https://www150.statcan.gc.ca/t1/tbl1/en/dtbl';
+  const BASE_URL = 'https://www150.statcan.gc.ca/t1/wds/rest';
 
   // --------------------------------------------------------------------------
   // Cache helpers
@@ -36,23 +40,29 @@
   // Core fetch helpers
   // --------------------------------------------------------------------------
 
-  async function apiFetch(url) {
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`StatsCan API error ${resp.status} for ${url}`);
+  async function apiPost(endpoint, body) {
+    const resp = await fetch(`${BASE_URL}/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) throw new Error(`StatsCan API error ${resp.status} for ${endpoint}`);
     return resp.json();
   }
 
   /**
    * Fetch the cube metadata for a given 8-digit PID.
-   * Returns the full parsed JSON body.
+   * Returns the unwrapped metadata object (data[0] from the POST array response).
    */
   async function getCubeMetadata(pid) {
     const key = `statscan_meta_${pid}`;
     const cached = readCache(key);
     if (cached) return cached;
-    const data = await apiFetch(`${BASE_URL}/getCubeMetadata/${pid}`);
-    writeCache(key, data);
-    return data;
+    const data = await apiPost('getCubeMetadata', [{ productId: pid }]);
+    // POST with array body returns an array; unwrap the first element
+    const result = Array.isArray(data) ? data[0] : data;
+    writeCache(key, result);
+    return result;
   }
 
   /**
@@ -64,15 +74,17 @@
     const cached = readCache(ck);
     if (cached) return cached;
 
-    const url = `${BASE_URL}/getDataFromCubePidCoordAndLatestNPeriods/${pid}/${coord}/${latestN}`;
-    let json;
+    let data;
     try {
-      json = await apiFetch(url);
+      data = await apiPost('getDataFromCubePidCoordAndLatestNPeriods', [
+        { productId: pid, coordinate: coord, latestN: latestN },
+      ]);
     } catch (err) {
       throw new Error(`Failed to fetch StatsCan series PID ${pid} coord ${coord}: ${err.message}`);
     }
 
-    const points = json?.object?.vectorDataPoint;
+    // POST with array body returns an array; unwrap the first element's vectorDataPoint
+    const points = data[0]?.object?.vectorDataPoint;
     if (!Array.isArray(points) || points.length === 0) {
       throw new Error(`No data returned for StatsCan PID ${pid} coord ${coord}`);
     }
@@ -104,6 +116,7 @@
     // dimFilters: array of strings, one per dimension, to match in member names
     try {
       const meta = await getCubeMetadata(pid);
+      // POST response: meta is data[0], so dimensions live at meta.object.dimension
       const dims = meta?.object?.dimension;
       if (!Array.isArray(dims) || dims.length === 0) {
         console.warn(`[StatsCanAPI] No dimension data for PID ${pid}, using fallback coord`);
