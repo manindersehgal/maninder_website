@@ -1,43 +1,77 @@
 /**
  * statscan.js
- * Statistics Canada WDS REST API data layer
- * Exposes window.StatsCanAPI with functions for each economic indicator.
- * Responses are cached in sessionStorage to avoid redundant network calls.
+ * Statistics Canada economic data layer.
  *
- * NOTE: The StatsCan WDS API uses POST for all data endpoints.
- * If charts fail with CORS errors in the browser console, the recommended
- * fix is to use a pre-computed blob storage layer (see Databricks pipeline).
+ * In production: reads from a pre-built JSON blob written by the Databricks
+ * pipeline every Monday morning.  No StatsCan POST calls from the browser,
+ * no CORS issues.
+ *
+ * In local development: if BLOB_DATA_URL is empty the functions fall back to
+ * calling the StatsCan WDS API directly (requires a local HTTP server — not
+ * file:// protocol).
+ *
+ * Setup:
+ *   1. Run databricks/statscan_pipeline.py on Databricks.
+ *   2. Copy the printed Blob URL into BLOB_DATA_URL below.
+ *   3. Push to GitHub.  Done.
  */
 
 (function () {
   'use strict';
 
+  // ── Set this to your Azure Blob Storage URL after running the Databricks pipeline ──
+  // e.g. 'https://mystorageaccount.blob.core.windows.net/website-data/statscan_data.json'
+  const BLOB_DATA_URL = '';
+  // ─────────────────────────────────────────────────────────────────────────────────
+
   const BASE_URL = 'https://www150.statcan.gc.ca/t1/wds/rest';
 
   // --------------------------------------------------------------------------
-  // Cache helpers
+  // Blob data loader — fetches once and caches for the page session
   // --------------------------------------------------------------------------
 
-  function cacheKey(pid, coord) {
-    return `statscan_${pid}_${coord}`;
+  let _blobPromise = null;
+
+  function loadBlobData() {
+    if (!BLOB_DATA_URL) return Promise.resolve(null);
+    if (_blobPromise) return _blobPromise;
+
+    _blobPromise = fetch(BLOB_DATA_URL)
+      .then((r) => {
+        if (!r.ok) throw new Error(`Blob fetch failed: ${r.status}`);
+        return r.json();
+      })
+      .then((data) => {
+        console.log(`[StatsCanAPI] Loaded blob data (updated: ${data.lastUpdated})`);
+        return data;
+      })
+      .catch((err) => {
+        console.warn(`[StatsCanAPI] Blob unavailable, falling back to direct API: ${err.message}`);
+        _blobPromise = null;
+        return null;
+      });
+
+    return _blobPromise;
   }
+
+  // --------------------------------------------------------------------------
+  // Session cache helpers (used by direct API fallback path)
+  // --------------------------------------------------------------------------
 
   function readCache(key) {
     try {
       const raw = sessionStorage.getItem(key);
       if (raw) return JSON.parse(raw);
-    } catch (_) { /* quota or parse error — ignore */ }
+    } catch (_) {}
     return null;
   }
 
   function writeCache(key, data) {
-    try {
-      sessionStorage.setItem(key, JSON.stringify(data));
-    } catch (_) { /* storage quota — ignore */ }
+    try { sessionStorage.setItem(key, JSON.stringify(data)); } catch (_) {}
   }
 
   // --------------------------------------------------------------------------
-  // Core fetch helpers
+  // Direct API helpers (fallback when blob URL is not set)
   // --------------------------------------------------------------------------
 
   async function apiPost(endpoint, body) {
@@ -50,113 +84,12 @@
     return resp.json();
   }
 
-  /**
-   * Fetch the cube metadata for a given 8-digit PID.
-   * Returns the unwrapped metadata object (data[0] from the POST array response).
-   */
-  async function getCubeMetadata(pid) {
-    const key = `statscan_meta_${pid}`;
-    const cached = readCache(key);
-    if (cached) return cached;
-    const data = await apiPost('getCubeMetadata', [{ productId: pid }]);
-    // POST with array body returns an array; unwrap the first element
-    const result = Array.isArray(data) ? data[0] : data;
-    writeCache(key, result);
-    return result;
-  }
-
-  /**
-   * Fetch the latest N periods of data for a given PID + coordinate.
-   * Returns the normalized { labels, values, latestValue, latestDate, change, changePercent, unit } object.
-   */
-  async function fetchSeries(pid, coord, latestN, unit) {
-    const ck = cacheKey(pid, coord);
-    const cached = readCache(ck);
-    if (cached) return cached;
-
-    let data;
-    try {
-      data = await apiPost('getDataFromCubePidCoordAndLatestNPeriods', [
-        { productId: pid, coordinate: coord, latestN: latestN },
-      ]);
-    } catch (err) {
-      throw new Error(`Failed to fetch StatsCan series PID ${pid} coord ${coord}: ${err.message}`);
-    }
-
-    // POST with array body returns an array; unwrap the first element's vectorDataPoint
-    const points = data[0]?.object?.vectorDataPoint;
-    if (!Array.isArray(points) || points.length === 0) {
-      throw new Error(`No data returned for StatsCan PID ${pid} coord ${coord}`);
-    }
-
-    // Points arrive oldest-first from this endpoint; sort to be safe
-    const sorted = [...points].sort((a, b) => {
-      const da = a.refPerRaw || a.refPer;
-      const db = b.refPerRaw || b.refPer;
-      return da < db ? -1 : 1;
-    });
-
-    const labels = sorted.map((p) => p.refPerRaw || p.refPer);
-    const values = sorted.map((p) => parseFloat(p.value));
-
-    const latestValue = values[values.length - 1];
-    const latestDate = labels[labels.length - 1];
-    const prevValue = values.length > 1 ? values[values.length - 2] : latestValue;
-    const change = latestValue - prevValue;
-    const changePercent = prevValue !== 0 ? (change / prevValue) * 100 : 0;
-
-    const result = { labels, values, latestValue, latestDate, change, changePercent, unit };
-    writeCache(ck, result);
-    return result;
-  }
-
-  /**
-   * Attempt to discover a coordinate from cube metadata.
-   * Strategy: walk dimension members to find the target label (case-insensitive substring).
-   * Returns a dot-separated coordinate string like "1.1.1".
-   * Falls back to "1.1" if discovery fails.
-   */
-  async function discoverCoordinate(pid, dimFilters) {
-    // dimFilters: array of strings, one per dimension, to match in member names
-    try {
-      const meta = await getCubeMetadata(pid);
-      // POST response: meta is data[0], so dimensions live at meta.object.dimension
-      const dims = meta?.object?.dimension;
-      if (!Array.isArray(dims) || dims.length === 0) {
-        console.warn(`[StatsCanAPI] No dimension data for PID ${pid}, using fallback coord`);
-        return dimFilters.map(() => '1').join('.');
-      }
-
-      const indices = dimFilters.map((filter, dimIdx) => {
-        const dim = dims[dimIdx];
-        if (!dim || !Array.isArray(dim.member)) return 1;
-        const filterLower = filter.toLowerCase();
-        const match = dim.member.find((m) =>
-          (m.memberNameEng || '').toLowerCase().includes(filterLower)
-        );
-        return match ? match.memberId : 1;
-      });
-
-      return indices.join('.');
-    } catch (err) {
-      console.warn(`[StatsCanAPI] Coordinate discovery failed for PID ${pid}: ${err.message}. Using fallback.`);
-      return dimFilters.map(() => '1').join('.');
-    }
-  }
-
-  /**
-   * Fetch the latest N periods for a specific vector ID using getDataFromVectorsAndLatestNPeriods.
-   * This is more reliable than coordinate discovery — use it when the vector ID is known.
-   */
   async function fetchVectorSeries(vectorId, latestN, unit) {
     const ck = `statscan_vec_${vectorId}`;
     const cached = readCache(ck);
     if (cached) return cached;
 
-    const data = await apiPost('getDataFromVectorsAndLatestNPeriods', [
-      { vectorId, latestN },
-    ]);
-
+    const data = await apiPost('getDataFromVectorsAndLatestNPeriods', [{ vectorId, latestN }]);
     const obj = data?.[0];
     if (!obj || obj.status !== 'SUCCESS') {
       throw new Error(`StatsCan vector ${vectorId} returned status: ${obj?.status ?? 'unknown'}`);
@@ -164,7 +97,7 @@
 
     const points = obj.object?.vectorDataPoint;
     if (!Array.isArray(points) || points.length === 0) {
-      throw new Error(`No data returned for StatsCan vector ${vectorId}`);
+      throw new Error(`No data for StatsCan vector ${vectorId}`);
     }
 
     const sorted = [...points].sort((a, b) => {
@@ -175,265 +108,131 @@
 
     const labels = sorted.map((p) => p.refPerRaw || p.refPer);
     const values = sorted.map((p) => parseFloat(p.value));
-
-    const latestValue = values[values.length - 1];
-    const latestDate = labels[labels.length - 1];
-    const prevValue = values.length > 1 ? values[values.length - 2] : latestValue;
-    const change = latestValue - prevValue;
-    const changePercent = prevValue !== 0 ? (change / prevValue) * 100 : 0;
-
-    const result = { labels, values, latestValue, latestDate, change, changePercent, unit };
+    const result = buildSeriesResult(labels, values, unit);
     writeCache(ck, result);
     return result;
   }
 
-  // --------------------------------------------------------------------------
-  // Individual indicator functions
-  // --------------------------------------------------------------------------
+  async function fetchCoordSeries(pid, coord, latestN, unit) {
+    const ck = `statscan_${pid}_${coord}`;
+    const cached = readCache(ck);
+    if (cached) return cached;
 
-  /**
-   * Real GDP — Table 36-10-0104-01 (quarterly, seasonally adjusted, chained 2012 dollars)
-   * Dimension 1: Geography → Canada
-   * Dimension 2: Prices → Chained (2012) dollars
-   * Dimension 3: Seasonal adjustment → Seasonally adjusted at annual rates
-   * Dimension 4: Estimates → Gross domestic product at market prices
-   */
-  async function getGDP() {
-    const pid = '36100104';
-    let coord;
-    try {
-      coord = await discoverCoordinate(pid, ['canada', 'chained', 'seasonally adjusted', 'gross domestic product at market']);
-    } catch (_) {
-      coord = '1.1.1.1';
+    const data = await apiPost('getDataFromCubePidCoordAndLatestNPeriods', [
+      { productId: pid, coordinate: coord, latestN },
+    ]);
+
+    const points = data[0]?.object?.vectorDataPoint;
+    if (!Array.isArray(points) || points.length === 0) {
+      throw new Error(`No data for StatsCan PID ${pid} coord ${coord}`);
     }
-    try {
-      return await fetchSeries(pid, coord, 40, 'Billions CAD (Chained 2012$)');
-    } catch (_) {
-      // Fallback coordinate
-      return fetchSeries(pid, '1.1.1.1', 40, 'Billions CAD (Chained 2012$)');
-    }
+
+    const sorted = [...points].sort((a, b) => {
+      const da = a.refPerRaw || a.refPer;
+      const db = b.refPerRaw || b.refPer;
+      return da < db ? -1 : 1;
+    });
+
+    const labels = sorted.map((p) => p.refPerRaw || p.refPer);
+    const values = sorted.map((p) => parseFloat(p.value));
+    const result = buildSeriesResult(labels, values, unit);
+    writeCache(ck, result);
+    return result;
   }
 
-  /**
-   * CPI — Table 18-10-0004-01 (monthly, all-items, Canada)
-   */
-  async function getCPI() {
-    const pid = '18100004';
-    let coord;
-    try {
-      coord = await discoverCoordinate(pid, ['canada', 'all-items']);
-    } catch (_) {
-      coord = '1.1';
-    }
-    try {
-      return await fetchSeries(pid, coord, 60, 'Index (2002=100)');
-    } catch (_) {
-      return fetchSeries(pid, '1.1', 60, 'Index (2002=100)');
-    }
+  function buildSeriesResult(labels, values, unit) {
+    const latestValue  = values[values.length - 1];
+    const latestDate   = labels[labels.length - 1];
+    const prevValue    = values.length > 1 ? values[values.length - 2] : latestValue;
+    const change       = latestValue - prevValue;
+    const changePercent = prevValue !== 0 ? (change / prevValue) * 100 : 0;
+    return { labels, values, latestValue, latestDate, change, changePercent, unit };
   }
 
-  /**
-   * Unemployment Rate — vector 2062815 (Canada, both sexes, 15+, monthly, Table 14-10-0287-01)
-   * Vector ID confirmed from Alberta Government WDS notebook.
-   */
+  // --------------------------------------------------------------------------
+  // Public indicator functions
+  // Each tries the blob first, then falls back to a direct API call.
+  // --------------------------------------------------------------------------
+
   async function getUnemployment() {
+    const blob = await loadBlobData();
+    if (blob?.unemployment) return blob.unemployment;
+    // Fallback: vector 2062815 = Canada unemployment rate, both sexes, 15+ (confirmed)
     return fetchVectorSeries(2062815, 60, '%');
   }
 
-  /**
-   * Labour Productivity — Table 36-10-0480-01 (quarterly, business sector)
-   */
+  async function getGDP() {
+    const blob = await loadBlobData();
+    if (blob?.gdp) return blob.gdp;
+    return fetchCoordSeries(36100104, '1.1.1.1', 40, 'Billions CAD (Chained 2012$)');
+  }
+
+  async function getCPI() {
+    const blob = await loadBlobData();
+    if (blob?.cpi) return blob.cpi;
+    return fetchCoordSeries(18100004, '1.1', 60, 'Index (2002=100)');
+  }
+
   async function getLabourProductivity() {
-    const pid = '36100480';
-    let coord;
-    try {
-      coord = await discoverCoordinate(pid, ['business sector', 'labour productivity']);
-    } catch (_) {
-      coord = '1.1';
-    }
-    try {
-      return await fetchSeries(pid, coord, 40, 'Index (2012=100)');
-    } catch (_) {
-      return fetchSeries(pid, '1.1', 40, 'Index (2012=100)');
-    }
+    const blob = await loadBlobData();
+    if (blob?.labour_productivity) return blob.labour_productivity;
+    return fetchCoordSeries(36100480, '1.1', 40, 'Index (2012=100)');
   }
 
-  /**
-   * Housing Starts — Table 34-10-0143-01 (monthly, Canada total)
-   */
   async function getHousingStarts() {
-    const pid = '34100143';
-    let coord;
-    try {
-      coord = await discoverCoordinate(pid, ['canada', 'total']);
-    } catch (_) {
-      coord = '1.1';
-    }
-    try {
-      return await fetchSeries(pid, coord, 60, 'Units');
-    } catch (_) {
-      return fetchSeries(pid, '1.1', 60, 'Units');
-    }
+    const blob = await loadBlobData();
+    if (blob?.housing_starts) return blob.housing_starts;
+    return fetchCoordSeries(34100143, '1.1', 60, 'Units');
   }
 
-  /**
-   * Bank of Canada Rate — Table 10-10-0145-01 (monthly, bank rate / overnight rate)
-   */
   async function getBoCRate() {
-    const pid = '10100145';
-    let coord;
-    try {
-      coord = await discoverCoordinate(pid, ['bank rate']);
-    } catch (_) {
-      coord = '1.1';
-    }
-    try {
-      return await fetchSeries(pid, coord, 60, '%');
-    } catch (err1) {
-      // Try overnight rate
-      try {
-        const coord2 = await discoverCoordinate(pid, ['overnight']);
-        return await fetchSeries(pid, coord2, 60, '%');
-      } catch (_) {
-        return fetchSeries(pid, '1.1', 60, '%');
-      }
-    }
+    const blob = await loadBlobData();
+    if (blob?.boc_rate) return blob.boc_rate;
+    return fetchCoordSeries(10100145, '1.2', 60, '%');
   }
 
-  /**
-   * Retail Sales — Table 20-10-0008-01 (monthly, total retail, Canada)
-   */
   async function getRetailSales() {
-    const pid = '20100008';
-    let coord;
-    try {
-      coord = await discoverCoordinate(pid, ['canada', 'total, retail trade']);
-    } catch (_) {
-      coord = '1.1';
-    }
-    try {
-      return await fetchSeries(pid, coord, 60, 'Millions CAD');
-    } catch (_) {
-      return fetchSeries(pid, '1.1', 60, 'Millions CAD');
-    }
+    const blob = await loadBlobData();
+    if (blob?.retail_sales) return blob.retail_sales;
+    return fetchCoordSeries(20100008, '1.1', 60, 'Millions CAD');
   }
 
-  /**
-   * International Merchandise Trade — Table 12-10-0011-01
-   * Returns an object with exports, imports, and net balance series.
-   */
   async function getTradeBalance() {
-    const pid = '12100011';
+    const blob = await loadBlobData();
+    if (blob?.trade) return blob.trade;
 
-    // Discover coordinates for exports and imports
-    let exportCoord, importCoord;
-    try {
-      exportCoord = await discoverCoordinate(pid, ['total exports']);
-    } catch (_) {
-      exportCoord = '1.1';
-    }
-    try {
-      importCoord = await discoverCoordinate(pid, ['total imports']);
-    } catch (_) {
-      importCoord = '1.2';
-    }
-
+    // Fallback: fetch exports and imports separately and compute balance
     const [exportData, importData] = await Promise.all([
-      fetchSeries(pid, exportCoord, 60, 'Millions CAD').catch(() => fetchSeries(pid, '1.1', 60, 'Millions CAD')),
-      fetchSeries(pid, importCoord, 60, 'Millions CAD').catch(() => fetchSeries(pid, '1.2', 60, 'Millions CAD')),
+      fetchCoordSeries(12100011, '1.1', 60, 'Millions CAD'),
+      fetchCoordSeries(12100011, '1.2', 60, 'Millions CAD'),
     ]);
 
-    // Align the two series on common dates
     const exportMap = new Map(exportData.labels.map((l, i) => [l, exportData.values[i]]));
     const importMap = new Map(importData.labels.map((l, i) => [l, importData.values[i]]));
-
-    // Use the union of labels, sorted
     const allLabels = [...new Set([...exportData.labels, ...importData.labels])].sort();
-    const exports_ = allLabels.map((l) => exportMap.get(l) ?? null);
-    const imports_ = allLabels.map((l) => importMap.get(l) ?? null);
-    const balance = allLabels.map((l, i) => {
-      const e = exports_[i];
-      const m = imports_[i];
+    const exports_  = allLabels.map((l) => exportMap.get(l) ?? null);
+    const imports_  = allLabels.map((l) => importMap.get(l) ?? null);
+    const balance   = allLabels.map((l, i) => {
+      const e = exports_[i], m = imports_[i];
       return e !== null && m !== null ? e - m : null;
     });
 
-    const latestExport = exports_.filter((v) => v !== null).at(-1) ?? 0;
-    const latestImport = imports_.filter((v) => v !== null).at(-1) ?? 0;
-    const latestBalance = latestExport - latestImport;
-    const latestDate = allLabels.at(-1) ?? '';
+    const latestBalance = balance.filter((v) => v !== null).at(-1) ?? 0;
+    const prevBalance   = balance.filter((v) => v !== null).at(-2) ?? latestBalance;
 
     return {
-      labels: allLabels,
-      exports: exports_,
-      imports: imports_,
-      balance,
-      latestValue: latestBalance,
-      latestDate,
-      change: 0,
-      changePercent: 0,
+      labels: allLabels, exports: exports_, imports: imports_, balance,
+      latestValue: latestBalance, latestDate: allLabels.at(-1) ?? '',
+      change: latestBalance - prevBalance,
+      changePercent: prevBalance !== 0 ? ((latestBalance - prevBalance) / Math.abs(prevBalance)) * 100 : 0,
       unit: 'Millions CAD',
     };
   }
 
-  /**
-   * GDP per Capita (derived) — real GDP (36100104) / population (17100005)
-   */
   async function getGDPPerCapita() {
-    const gdpPid = '36100104';
-    const popPid = '17100005';
-
-    let gdpCoord;
-    try {
-      gdpCoord = await discoverCoordinate(gdpPid, ['canada', 'chained', 'seasonally adjusted', 'gross domestic product at market']);
-    } catch (_) {
-      gdpCoord = '1.1.1.1';
-    }
-
-    let popCoord;
-    try {
-      popCoord = await discoverCoordinate(popPid, ['canada', 'total population']);
-    } catch (_) {
-      popCoord = '1.1';
-    }
-
-    const [gdpData, popData] = await Promise.all([
-      fetchSeries(gdpPid, gdpCoord, 40, 'Billions CAD').catch(() => fetchSeries(gdpPid, '1.1.1.1', 40, 'Billions CAD')),
-      fetchSeries(popPid, popCoord, 40, 'Thousands').catch(() => fetchSeries(popPid, '1.1', 40, 'Thousands')),
-    ]);
-
-    // Align on common labels (GDP is quarterly, pop is annual — use year prefix to match)
-    const popByYear = new Map(popData.labels.map((l, i) => [l.substring(0, 4), popData.values[i]]));
-
-    const labels = [];
-    const values = [];
-
-    for (let i = 0; i < gdpData.labels.length; i++) {
-      const label = gdpData.labels[i];
-      const year = label.substring(0, 4);
-      const pop = popByYear.get(year);
-      if (pop && pop > 0) {
-        // GDP in billions → * 1e9; pop in thousands → * 1e3; result in CAD per person
-        const perCapita = (gdpData.values[i] * 1e9) / (pop * 1e3);
-        labels.push(label);
-        values.push(Math.round(perCapita));
-      }
-    }
-
-    if (values.length === 0) {
-      throw new Error('Could not derive GDP per capita: no overlapping data between GDP and population tables');
-    }
-
-    const latestValue = values[values.length - 1];
-    const latestDate = labels[labels.length - 1];
-    const prevValue = values.length > 1 ? values[values.length - 2] : latestValue;
-    const change = latestValue - prevValue;
-    const changePercent = prevValue !== 0 ? (change / prevValue) * 100 : 0;
-
-    const result = { labels, values, latestValue, latestDate, change, changePercent, unit: 'CAD per capita' };
-
-    // Cache it under a combined key
-    writeCache('statscan_gdp_per_capita', result);
-    return result;
+    // GDP per capita comparison uses the World Bank API (GET-based, no CORS issues).
+    // This function is intentionally left as a passthrough — see worldbank.js.
+    throw new Error('getGDPPerCapita: use WorldBankAPI.getGDPPerCapita() instead');
   }
 
   // --------------------------------------------------------------------------
