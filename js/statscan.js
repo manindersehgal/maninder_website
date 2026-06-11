@@ -90,9 +90,13 @@
     }
 
     // Points arrive oldest-first from this endpoint; sort to be safe
-    const sorted = [...points].sort((a, b) => (a.refPer < b.refPer ? -1 : 1));
+    const sorted = [...points].sort((a, b) => {
+      const da = a.refPerRaw || a.refPer;
+      const db = b.refPerRaw || b.refPer;
+      return da < db ? -1 : 1;
+    });
 
-    const labels = sorted.map((p) => p.refPer);
+    const labels = sorted.map((p) => p.refPerRaw || p.refPer);
     const values = sorted.map((p) => parseFloat(p.value));
 
     const latestValue = values[values.length - 1];
@@ -138,6 +142,49 @@
       console.warn(`[StatsCanAPI] Coordinate discovery failed for PID ${pid}: ${err.message}. Using fallback.`);
       return dimFilters.map(() => '1').join('.');
     }
+  }
+
+  /**
+   * Fetch the latest N periods for a specific vector ID using getDataFromVectorsAndLatestNPeriods.
+   * This is more reliable than coordinate discovery — use it when the vector ID is known.
+   */
+  async function fetchVectorSeries(vectorId, latestN, unit) {
+    const ck = `statscan_vec_${vectorId}`;
+    const cached = readCache(ck);
+    if (cached) return cached;
+
+    const data = await apiPost('getDataFromVectorsAndLatestNPeriods', [
+      { vectorId, latestN },
+    ]);
+
+    const obj = data?.[0];
+    if (!obj || obj.status !== 'SUCCESS') {
+      throw new Error(`StatsCan vector ${vectorId} returned status: ${obj?.status ?? 'unknown'}`);
+    }
+
+    const points = obj.object?.vectorDataPoint;
+    if (!Array.isArray(points) || points.length === 0) {
+      throw new Error(`No data returned for StatsCan vector ${vectorId}`);
+    }
+
+    const sorted = [...points].sort((a, b) => {
+      const da = a.refPerRaw || a.refPer;
+      const db = b.refPerRaw || b.refPer;
+      return da < db ? -1 : 1;
+    });
+
+    const labels = sorted.map((p) => p.refPerRaw || p.refPer);
+    const values = sorted.map((p) => parseFloat(p.value));
+
+    const latestValue = values[values.length - 1];
+    const latestDate = labels[labels.length - 1];
+    const prevValue = values.length > 1 ? values[values.length - 2] : latestValue;
+    const change = latestValue - prevValue;
+    const changePercent = prevValue !== 0 ? (change / prevValue) * 100 : 0;
+
+    const result = { labels, values, latestValue, latestDate, change, changePercent, unit };
+    writeCache(ck, result);
+    return result;
   }
 
   // --------------------------------------------------------------------------
@@ -186,21 +233,11 @@
   }
 
   /**
-   * Unemployment Rate — Table 14-10-0287-01 (monthly, both sexes, 15+, Canada)
+   * Unemployment Rate — vector 2062815 (Canada, both sexes, 15+, monthly, Table 14-10-0287-01)
+   * Vector ID confirmed from Alberta Government WDS notebook.
    */
   async function getUnemployment() {
-    const pid = '14100287';
-    let coord;
-    try {
-      coord = await discoverCoordinate(pid, ['canada', 'both sexes', '15 years and over', 'unemployment rate']);
-    } catch (_) {
-      coord = '1.1.1.6';
-    }
-    try {
-      return await fetchSeries(pid, coord, 60, '%');
-    } catch (_) {
-      return fetchSeries(pid, '1.1.1.6', 60, '%');
-    }
+    return fetchVectorSeries(2062815, 60, '%');
   }
 
   /**
