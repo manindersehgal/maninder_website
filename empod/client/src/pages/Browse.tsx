@@ -4,13 +4,11 @@ import { SearchBar } from "@/components/SearchBar";
 import { ShowCard } from "@/components/ShowCard";
 import { EpisodeRow } from "@/components/EpisodeRow";
 import { searchShows, fetchTopicStream, type Episode } from "@/lib/api";
-import { usePlayer } from "@/lib/player";
-import { Play, Loader2, Podcast, AlertCircle } from "lucide-react";
+import { Podcast, AlertCircle } from "lucide-react";
 
 export function Browse() {
   const params = useParams<{ topic?: string }>();
   const [, navigate] = useLocation();
-  const p = usePlayer();
   const topic = params.topic ? decodeURIComponent(params.topic) : "";
 
   const showsQuery = useQuery({
@@ -45,38 +43,6 @@ export function Browse() {
 
       {topic && (
         <>
-          {/* Play-all hero */}
-          <div className="mb-8 overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary/15 via-card to-card p-6 md:p-8">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wider text-primary">
-                  Your topic stream · Past 7 days
-                </div>
-                <h1 className="mt-1 text-xl font-bold tracking-tight text-foreground md:text-2xl">
-                  Every recent moment mentioning “{topic}”
-                </h1>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {epsQuery.isLoading
-                    ? "Reading timestamped transcripts from this week…"
-                    : `${episodes.length} matching chapters found across ${epsQuery.data?.scannedEpisodes || 0} recent episodes.`}
-                </p>
-              </div>
-              <button
-                onClick={() => episodes.length && p.playQueue(episodes, 0)}
-                disabled={!episodes.length || epsQuery.isLoading}
-                data-testid="button-play-all"
-                className="flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md hover:opacity-90 disabled:opacity-40"
-              >
-                {epsQuery.isLoading ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Play size={16} className="fill-current" />
-                )}
-                Play topic stream
-              </button>
-            </div>
-          </div>
-
           {/* Episodes */}
           {epsQuery.isLoading ? (
             <SkeletonList />
