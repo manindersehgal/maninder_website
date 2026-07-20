@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { SearchBar } from "@/components/SearchBar";
 import { ShowCard } from "@/components/ShowCard";
 import { EpisodeRow } from "@/components/EpisodeRow";
-import { searchShows, fetchTopicStream, type Episode } from "@/lib/api";
+import { searchShows, fetchEpisodes, type Episode } from "@/lib/api";
 import { Podcast, AlertCircle } from "lucide-react";
 
 export function Browse() {
@@ -18,12 +18,12 @@ export function Browse() {
   });
 
   const epsQuery = useQuery({
-    queryKey: ["/api/topic-stream", topic],
-    queryFn: () => fetchTopicStream(topic),
+    queryKey: ["/api/episodes", topic],
+    queryFn: () => fetchEpisodes(topic),
     enabled: !!topic,
   });
 
-  const episodes: Episode[] = epsQuery.data?.chapters || [];
+  const episodes: Episode[] = epsQuery.data || [];
   const go = (t: string) => navigate(`/browse/${encodeURIComponent(t)}`);
 
   return (
@@ -49,10 +49,10 @@ export function Browse() {
           ) : epsQuery.isError ? (
             <ErrorState msg="Couldn't load episodes for this topic." />
           ) : episodes.length === 0 ? (
-            <EmptyState msg="No episodes found. Try a broader topic." />
+            <EmptyState msg="No podcast episodes found. Try another search." />
           ) : (
             <section className="mb-10">
-              <SectionTitle icon={<Podcast size={15} />}>Matching chapters</SectionTitle>
+              <SectionTitle icon={<Podcast size={15} />}>Episodes</SectionTitle>
               <div className="space-y-0.5">
                 {episodes.map((ep, i) => (
                   <EpisodeRow key={ep.id + i} ep={ep} queue={episodes} index={i} />
