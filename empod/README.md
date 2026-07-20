@@ -1,11 +1,10 @@
 # em.pod
 
-An Apple Podcasts–style podcast player that plays every podcast about a topic you choose, plus deep-link audio streams.
+An Apple Podcasts–style player that discovers public RSS podcasts and builds topic-driven listening queues.
 
 ## Features
 
 - **Topic listening** — type any topic; em.pod searches podcasts (iTunes API), fetches each show's RSS feed, ranks episodes that actually mention your topic, and queues them up. Hit **Play all** to listen back-to-back.
-- **Deep-link streams** — paste any direct audio URL (mp3, m4a, aac…) to play instantly. Share `?stream=<url>` to auto-load. Falls back to a Range-aware stream proxy if a host blocks cross-origin audio.
 - **Player** — play/pause, seek, skip ±15s, speed (0.75–2×), volume, up-next queue, live equalizer.
 - **Apple Podcasts look** — purple accent, sidebar + now-playing bar, dark/light mode, mobile tab nav.
 

@@ -23,8 +23,7 @@ export function Queue() {
 
       {p.queue.length === 0 ? (
         <div className="py-20 text-center text-sm text-muted-foreground">
-          Your queue is empty. Search a topic and hit Play all, or paste a
-          stream URL.
+          Your queue is empty. Search a topic or choose an episode to begin.
         </div>
       ) : (
         <div className="space-y-0.5">

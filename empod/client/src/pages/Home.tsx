@@ -1,6 +1,6 @@
 import { useLocation } from "wouter";
 import { SearchBar } from "@/components/SearchBar";
-import { TrendingUp, Radio, Sparkles } from "lucide-react";
+import { TrendingUp, Podcast, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
 
 const TOPICS = [
@@ -58,11 +58,11 @@ export function Home() {
 
       <div className="mt-10 grid gap-3 sm:grid-cols-2">
         <Feature
-          icon={<Radio size={18} />}
-          title="Deep-link streams"
-          desc="Paste any direct audio URL and hit play — no feed required."
-          href="/stream"
-          cta="Open stream player"
+          icon={<Podcast size={18} />}
+          title="Public podcast feeds"
+          desc="Discover shows and stream episodes directly from their public RSS feeds."
+          href="/browse"
+          cta="Find podcasts"
         />
         <Feature
           icon={<Sparkles size={18} />}

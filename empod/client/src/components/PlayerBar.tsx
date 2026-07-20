@@ -40,7 +40,7 @@ export function PlayerBar() {
   if (!p.current) {
     return (
       <div className="border-t border-border bg-sidebar/60 backdrop-blur px-4 py-3 text-center text-sm text-muted-foreground">
-        Nothing playing — search a topic or paste a stream URL to begin.
+        Nothing playing — search a topic or choose a podcast to begin.
       </div>
     );
   }

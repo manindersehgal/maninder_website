@@ -1,11 +1,10 @@
 import { Link, useLocation } from "wouter";
-import { Home, Compass, Radio, ListMusic, Sun, Moon } from "lucide-react";
+import { Home, Compass, ListMusic, Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const NAV = [
   { href: "/", label: "Now", icon: Home },
   { href: "/browse", label: "Browse", icon: Compass },
-  { href: "/stream", label: "Stream", icon: Radio },
   { href: "/queue", label: "Queue", icon: ListMusic },
 ];
 

@@ -48,24 +48,3 @@ export function SearchBar({
     </form>
   );
 }
-
-/** Parse the query string that lives after the hash, e.g. #/browse?topic=ai */
-export function useHashQuery(key: string): string {
-  const hash = window.location.hash || "";
-  const qIndex = hash.indexOf("?");
-  if (qIndex === -1) return "";
-  const params = new URLSearchParams(hash.slice(qIndex + 1));
-  return params.get(key) || "";
-}
-
-/** Read both hash query and real query (deep-link stream support) */
-export function readQueryParam(key: string): string {
-  const hash = window.location.hash || "";
-  const qIndex = hash.indexOf("?");
-  if (qIndex !== -1) {
-    const v = new URLSearchParams(hash.slice(qIndex + 1)).get(key);
-    if (v) return v;
-  }
-  const real = new URLSearchParams(window.location.search).get(key);
-  return real || "";
-}

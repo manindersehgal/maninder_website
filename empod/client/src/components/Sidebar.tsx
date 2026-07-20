@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, Compass, Radio, ListMusic, Moon, Sun } from "lucide-react";
+import { Home, Compass, ListMusic, Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 
 function Logo() {
@@ -30,7 +30,6 @@ function Logo() {
 const NAV = [
   { href: "/", label: "Listen Now", icon: Home, testid: "link-home" },
   { href: "/browse", label: "Browse", icon: Compass, testid: "link-browse" },
-  { href: "/stream", label: "Deep-Link Stream", icon: Radio, testid: "link-stream" },
   { href: "/queue", label: "Up Next", icon: ListMusic, testid: "link-queue" },
 ];
 
