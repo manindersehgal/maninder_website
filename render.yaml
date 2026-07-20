@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: empod
+    runtime: node
+    plan: free
+    rootDir: empod
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeployTrigger: commit
+    domains:
+      - listen.manindersehgal.com
+    envVars:
+      - key: NODE_VERSION
+        value: 22
