@@ -29,10 +29,8 @@ export function Browse() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-8 pb-24">
       <div className="mb-6">
-        <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Topic
-        </div>
-        <SearchBar initial={topic} onSubmit={go} />
+        <h1 className="mb-4 text-2xl font-bold tracking-tight">Search</h1>
+        <SearchBar initial={topic} onSubmit={go} placeholder="Search shows, people, or topics" />
       </div>
 
       {!topic && (
@@ -43,7 +41,19 @@ export function Browse() {
 
       {topic && (
         <>
-          {/* Episodes */}
+          {/* Shows arrive first so search feels immediate */}
+          {showsQuery.isLoading ? (
+            <SkeletonRow />
+          ) : showsQuery.data && showsQuery.data.length > 0 ? (
+            <section className="mb-10">
+              <SectionTitle icon={<Podcast size={15} />}>Shows</SectionTitle>
+              <div className="flex gap-5 overflow-x-auto pb-2">
+                {showsQuery.data.slice(0, 12).map((s) => <ShowCard key={s.id} show={s} />)}
+              </div>
+            </section>
+          ) : null}
+
+          {/* Recent episodes */}
           {epsQuery.isLoading ? (
             <SkeletonList />
           ) : epsQuery.isError ? (
@@ -52,7 +62,7 @@ export function Browse() {
             <EmptyState msg="No podcast episodes found. Try another search." />
           ) : (
             <section className="mb-10">
-              <SectionTitle icon={<Podcast size={15} />}>Episodes</SectionTitle>
+              <SectionTitle icon={<Podcast size={15} />}>Latest Episodes</SectionTitle>
               <div className="space-y-0.5">
                 {episodes.map((ep, i) => (
                   <EpisodeRow key={ep.id + i} ep={ep} queue={episodes} index={i} />
@@ -60,22 +70,6 @@ export function Browse() {
               </div>
             </section>
           )}
-
-          {/* Shows */}
-          {showsQuery.isLoading ? (
-            <SkeletonRow />
-          ) : showsQuery.data && showsQuery.data.length > 0 ? (
-            <section>
-              <SectionTitle icon={<Podcast size={15} />}>
-                Podcasts about “{topic}”
-              </SectionTitle>
-              <div className="flex gap-5 overflow-x-auto pb-2">
-                {showsQuery.data.map((s) => (
-                  <ShowCard key={s.id} show={s} />
-                ))}
-              </div>
-            </section>
-          ) : null}
         </>
       )}
     </div>

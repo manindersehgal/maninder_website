@@ -32,6 +32,12 @@ export async function searchShows(term: string): Promise<Show[]> {
   return d.results as Show[];
 }
 
+export async function fetchTopShows(): Promise<Show[]> {
+  const r = await apiRequest("GET", "/api/top-shows");
+  const d = await r.json();
+  return d.results as Show[];
+}
+
 export async function fetchEpisodes(term: string): Promise<Episode[]> {
   const r = await apiRequest("GET", `/api/episodes?term=${encodeURIComponent(term)}`);
   const d = await r.json();

@@ -11,6 +11,7 @@ import { XMLParser } from "fast-xml-parser";
  * ------------------------------------------------------------------ */
 
 const ITUNES = "https://itunes.apple.com";
+const APPLE_TOP = "https://rss.marketingtools.apple.com/api/v2/us/podcasts/top/20/podcasts.json";
 
 export interface PodShow {
   id: number;
@@ -303,6 +304,28 @@ export async function registerRoutes(
     }
   });
 
+  /* ---- Apple Podcasts top shows ---- */
+  app.get("/api/top-shows", async (_req, res) => {
+    try {
+      const response = await fetch(APPLE_TOP, { headers: { "User-Agent": "em.pod/1.0" } });
+      if (!response.ok) throw new Error(`top shows fetch ${response.status}`);
+      const data: any = await response.json();
+      const results: PodShow[] = (data.feed?.results || []).map((show: any) => ({
+        id: Number(show.id),
+        title: show.name || "Untitled show",
+        author: show.artistName || "",
+        artwork: show.artworkUrl100?.replace("100x100", "600x600") || show.artworkUrl100 || "",
+        feedUrl: "",
+        genres: (show.genres || []).map((genre: any) => genre.name).filter(Boolean),
+        trackCount: 0,
+      }));
+      res.setHeader("Cache-Control", "public, max-age=900");
+      res.json({ results });
+    } catch (e: any) {
+      res.status(502).json({ message: e.message });
+    }
+  });
+
   /* ---- single feed parse ---- */
   app.get("/api/feed", async (req, res) => {
     try {
@@ -339,7 +362,7 @@ export async function registerRoutes(
     try {
       const term = String(req.query.term || "").trim();
       if (!term) return res.json({ episodes: [] as PodEpisode[], shows: 0 });
-      const limit = Math.min(Number(req.query.limit) || 18, 30);
+      const limit = Math.min(Number(req.query.limit) || 8, 12);
 
       const sr = await fetch(
         `${ITUNES}/search?media=podcast&term=${encodeURIComponent(
@@ -351,8 +374,7 @@ export async function registerRoutes(
 
       // fetch feeds in parallel (cap concurrency)
       const concurrency = 6;
-      const epsPerShow = 12;
-      const terms = term.toLowerCase().split(/\s+/).filter((t) => t.length >= 3);
+      const epsPerShow = 8;
       const all: PodEpisode[] = [];
       let idx = 0;
       const worker = async () => {
@@ -380,8 +402,11 @@ export async function registerRoutes(
       }
       await Promise.all(Array.from({ length: concurrency }, worker));
 
-      const ranked = rankEpisodes(all, terms).slice(0, 60);
-      res.json({ episodes: ranked, shows: shows.length });
+      const recent = all
+        .sort((a, b) => new Date(b.pubDate || 0).getTime() - new Date(a.pubDate || 0).getTime())
+        .slice(0, 40);
+      res.setHeader("Cache-Control", "public, max-age=300");
+      res.json({ episodes: recent, shows: shows.length });
     } catch (e: any) {
       res.status(502).json({ message: e.message });
     }
